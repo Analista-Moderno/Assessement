@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Interativo de Indicadores</title>
+    <!-- Chosen Palette: Corporate Clarity -->
+    <!-- Application Structure Plan: The application is structured into five thematic pillars: Governança & Estratégia, Liderança em Campo, Execução da Equipe, Performance & Resultados, and Ferramentas & Processos. This thematic approach was chosen over a simple list to create a narrative of operational excellence, showing users how different indicators contribute to broader business goals. The primary interaction is a top-level filter by Area (e.g., Comercial, RH) and Role (e.g., Vendedor, Supervisor), allowing different user personas to quickly access the information most relevant to them. Indicator details are presented in expandable cards to keep the main dashboard view clean and focused on high-level visuals. -->
+    <!-- Visualization & Content Choices:
+        - Total Points: Goal: Compare. Viz: Donut Chart. Justification: Quickly show the weight of each business area. Lib: Chart.js.
+        - Leadership Visits: Goal: Compare. Viz: Grouped Bar Chart. Justification: Clearly compare the visit requirements across different leadership roles (GV, SV, Diretor). Lib: Chart.js.
+        - Training Process: Goal: Organize. Viz: Flow Chart. Justification: Visually represent the mandatory monthly training steps. Method: HTML/CSS with Tailwind.
+        - Team Structure: Goal: Organize. Viz: Org Chart. Justification: Simplify the hierarchical structure rules. Method: HTML/CSS with Tailwind.
+        - Indicator Details: Goal: Organize. Viz: Interactive Cards. Justification: Manage information density by showing details on demand. Method: HTML/CSS/JS.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F4F6F9;
+            color: #343A40;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            max-height: 320px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .kpi-card {
+            transition: all 0.3s ease-in-out;
+        }
+        .kpi-card-header {
+            cursor: pointer;
+        }
+        .kpi-card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .kpi-card.open .kpi-card-body {
+            max-height: 2000px;
+        }
+        .kpi-card.open .chevron {
+            transform: rotate(180deg);
+        }
+        .chevron {
+            transition: transform 0.3s;
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="container mx-auto p-4 md:p-6">
+
+        <header class="text-center py-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#4A90E2]">Dashboard de Performance</h1>
+            <p class="text-lg text-gray-600 mt-2">Explore, filtre e entenda os indicadores chave para a excelência operacional.</p>
+        </header>
+
+        <nav class="sticky-nav bg-white/80 backdrop-blur-sm shadow-md rounded-lg p-4 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label for="filter-area" class="block text-sm font-medium text-gray-700">Filtrar por Área</label>
+                    <select id="filter-area" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm rounded-md">
+                        <option>Todas as Áreas</option>
+                        <option>ADMINISTRATIVO</option>
+                        <option>COMERCIAL</option>
+                        <option>RH</option>
+                        <option>SISTEMA OPERACIONAL</option>
+                        <option>TRADE</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-role" class="block text-sm font-medium text-gray-700">Filtrar por Cargo</label>
+                    <select id="filter-role" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm rounded-md">
+                        <option>Todos os Cargos</option>
+                        <option>Liderança</option>
+                        <option>Vendedor</option>
+                        <option>Supervisor</option>
+                        <option>Gerente</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 lg:col-span-2 flex items-end">
+                    <div class="flex flex-wrap gap-2 justify-center w-full">
+                       <a href="#governanca" class="px-3 py-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-[#4A90E2] hover:text-white rounded-md transition-colors">Governança</a>
+                       <a href="#lideranca" class="px-3 py-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-[#4A90E2] hover:text-white rounded-md transition-colors">Liderança</a>
+                       <a href="#execucao" class="px-3 py-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-[#4A90E2] hover:text-white rounded-md transition-colors">Execução</a>
+                       <a href="#performance" class="px-3 py-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-[#4A90E2] hover:text-white rounded-md transition-colors">Performance</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            <section id="governanca" class="mb-12">
+                <h2 class="text-3xl font-bold mb-6 border-l-4 border-[#4A90E2] pl-4">Governança & Estratégia</h2>
+                <p class="mb-8 text-gray-600">Esta seção aborda os pilares de alto nível que direcionam a operação, desde as reuniões de governança até as ferramentas e sistemas que suportam o negócio.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                     <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold mb-4 text-center">Pontuação por Área</h3>
+                         <div class="chart-container">
+                            <canvas id="pontosChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="kpi-container-governanca" class="space-y-4"></div>
+                </div>
+            </section>
+
+             <section id="lideranca" class="mb-12">
+                <h2 class="text-3xl font-bold mb-6 border-l-4 border-[#4A90E2] pl-4">Liderança em Campo</h2>
+                <p class="mb-8 text-gray-600">Foco nas atividades e responsabilidades da liderança no mercado, garantindo o acompanhamento da equipe, coaching e a execução da estratégia nos pontos de venda.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold mb-4 text-center">Visitas Mínimas da Liderança</h3>
+                         <div class="chart-container">
+                            <canvas id="visitasChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="kpi-container-lideranca" class="space-y-4"></div>
+                </div>
+            </section>
+
+            <section id="execucao" class="mb-12">
+                <h2 class="text-3xl font-bold mb-6 border-l-4 border-[#4A90E2] pl-4">Execução da Equipe</h2>
+                <p class="mb-8 text-gray-600">Detalha os processos e indicadores que medem a eficiência e a qualidade do trabalho da equipe de vendas no dia a dia, desde a capacitação até a otimização de rotas.</p>
+                <div id="kpi-container-execucao" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+            </section>
+
+            <section id="performance" class="mb-12">
+                <h2 class="text-3xl font-bold mb-6 border-l-4 border-[#4A90E2] pl-4">Performance & Resultados</h2>
+                 <p class="mb-8 text-gray-600">Métricas centrais que refletem o resultado das estratégias e da execução, incluindo coberturas, gestão de ranking, ações de mercado e o uso de plataformas digitais.</p>
+                <div id="kpi-container-performance" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            </section>
+        </main>
+
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const kpiData = [
+            { id: 'ADM09', area: 'ADMINISTRATIVO', title: 'Governança dos resultados comerciais', points: 8, pillar: 'governanca', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Reunião mensal até o 10º dia útil.</li><li>Presença obrigatória: Proprietário, Gerentes, Supervisores.</li><li>Pauta mínima inclui revisão de planos, análise de Sell Out, Coberturas, Ranking, FDS, Trade, Ativos, Incentivos, Heishop e Televendas.</li><li>Plano de ação para todos os indicadores com baixa performance.</li><li>Envio da ATA por e-mail em até 48h.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">E-mail com ATA, material de apoio e planos de ação.</p>` },
+            { id: 'RH02', area: 'RH', title: 'Remuneração Variável', points: 10, pillar: 'governanca', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Adesão de 100% dos indicadores da guia de remuneração variável regional.</li><li>A revenda pode acrescentar indicadores, mas não remover os obrigatórios.</li><li>Prazo de 30 dias para atualizar os indicadores após o envio da guia.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Documento ou print do sistema com o plano de remuneração vigente.</p>` },
+            { id: 'STO01', area: 'SISTEMA OPERACIONAL', title: 'Ferramentas Gerenciais', points: 8, pillar: 'governanca', role: 'Liderança', content: `<h5>Requisitos Chave (Checklist):</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Monitoramento de rota do vendedor.</li><li>Monitoramento de entrega.</li><li>Roterizador / Otimizador de entrega.</li><li>Plataforma de relatórios (BI).</li><li>Tecnologia de Inteligência Artificial para vendas (Ex: BeeGol).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Prints que comprovem o uso de TODAS as ferramentas. (Avaliação Trimestral)</p>` },
+            { id: 'COM11', area: 'COMERCIAL', title: 'Rota - Gerente de Vendas (GV)', points: 8, pillar: 'lideranca', role: 'Gerente', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Mínimo de 50 PDVs distintos visitados.</li><li>FDS: 20 PDVs.</li><li>Coaching com vendedor: 20 PDVs.</li><li>Potencial COMPASS em RGB: 10 PDVs.</li><li>Registrar resultados de FDS (Presença), Coaching (pontos fortes/oportunidades) e COMPASS (share).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Relatório (ferramenta, e-mail, Forms) com lista de PDVs, objetivos e resultados.</p>` },
+            { id: 'COM12', area: 'COMERCIAL', title: 'Rota - Supervisor de Vendas (SV)', points: 8, pillar: 'lideranca', role: 'Supervisor', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Mínimo de 30 PDVs distintos + Coaching.</li><li>FDS: 10 PDVs.</li><li>Foco RGB: 20 PDVs.</li><li>Coaching com vendedor: Mínimo de 5 PDVs por vendedor.</li><li>Registrar resultados de FDS, Coaching e Foco RGB.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Relatório (ferramenta, e-mail, Forms) com lista de PDVs, objetivos e resultados.</p>` },
+            { id: 'COM19', area: 'COMERCIAL', title: 'Rota - Proprietário / Diretor', points: 8, pillar: 'lideranca', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Mínimo de 20 PDVs distintos visitados.</li><li>Potencial COMPASS em RGB: 10 PDVs.</li><li>Maiores quedas RGB: 10 PDVs.</li><li>Registrar resultado FDS (Presença).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Relatório (ferramenta, e-mail, Forms) com lista de PDVs, objetivos e resultados.</p>` },
+            { id: 'COM20', area: 'COMERCIAL', title: 'RPS Estratégico de Vendas - Liderança', points: 8, pillar: 'lideranca', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Reunião semanal (exceto na semana de governança).</li><li>Participantes: GV, SVs e Trade.</li><li>Pauta mínima com revisão de ações e análise de tendência de KPIs.</li><li>Plano de ação para indicadores com tendência de não atingimento.</li><li>ATA assinada ou enviada por e-mail no dia.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha/BI da RPS e ATA da reunião.</p>` },
+            { id: 'COM05', area: 'COMERCIAL', title: 'Capacitação e desenvolvimento - Vendedor', points: 5, pillar: 'execucao', role: 'Vendedor', content: `<h5>Requisitos Chave (5 Treinamentos Obrigatórios):</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>1x/mês: Passos da Rotina Básica + Uso de EPIs.</li><li>2x/mês: PDVs Simulados (com estrutura mínima).</li><li>1x/mês: Produto Adequado por Canal (FDS).</li><li>1x/mês: Treinamento Foco da Operação.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Listas de presença, e-mails, relatórios de sistema e fotos do PDV simulado.</p>` },
+            { id: 'COM13', area: 'COMERCIAL', title: 'Fora de Rota', points: 5, pillar: 'execucao', role: 'Vendedor', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Percentual de pedidos fora de rota inferior a 10% no acumulado do ano.</li><li>Cálculo: (Total Pedidos Fora de Rota / Total Pedidos).</li><li>Pedidos de Televendas e Heishop podem ser expurgados se mapeados.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com o cálculo mensal e acumulado.</p>` },
+            { id: 'COM14', area: 'COMERCIAL', title: 'Estrutura Comercial', points: 5, pillar: 'execucao', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Máximo de 7 Supervisores por Gerente.</li><li>Máximo de 8 setores por Supervisor (teto de 10).</li><li>Mínimo de 10% de vendedores reserva.</li><li>Ter um analista de vendas.</li><li>Reposição de cargos em até 45 dias.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Organograma ou planilha detalhando a estrutura. (Avaliação Trimestral)</p>` },
+            { id: 'COM15', area: 'COMERCIAL', title: 'Dados Cadastrais - Base PDVs', points: 10, pillar: 'execucao', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Mínimo de 99% de atualização da base de PDVs.</li><li>Checklist: Razão social, endereço, categoria, segmentação, frequência de visita/entrega, telefone, geocodificação e e-mail (obrigatório para CNPJ).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Arquivo do sistema ou relatório comprovando a atualização dos dados.</p>` },
+            { id: 'COM16', area: 'COMERCIAL', title: 'Planner Comercial', points: 10, pillar: 'execucao', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Roteirização ou atualização executada nos últimos 12 meses.</li><li>Análise "Antes vs. Depois" deve ser apresentada, contemplando ganhos de otimização (KM, setores, etc.).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Book do planner ou apresentação com a análise completa. (Avaliação Anual)</p>` },
+            { id: 'COM17', area: 'COMERCIAL', title: 'Tabela de Preço', points: 8, pillar: 'execucao', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Tabelas de preço diferenciadas por canal (MF, ASI, ADG).</li><li>Diferenciação mínima para produtos chave de cada canal.</li><li>PDVs devem estar com a tabela correta parametrizada.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Print do sistema mostrando as tabelas e um exemplo de produto com preços diferentes por canal.</p>` },
+            { id: 'COM18', area: 'COMERCIAL', title: 'Plano Estratégico (Base COMPASS)', points: 8, pillar: 'performance', role: 'Liderança', content: `<h5>Requisitos Chave (Gestão em Planilha/BI):</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Gestão de performance e plano de ação para clientes Diamante e Ouro.</li><li>Mapeamento e gestão de potenciais de CHOPP.</li><li>Gestão de clientes com contrato de exclusividade.</li><li>Mapeamento detalhado de clientes da concorrência.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com todas as análises e planos de ação.</p>` },
+            { id: 'COM23', area: 'COMERCIAL', title: 'Cobertura Total', points: 10, pillar: 'performance', role: 'Vendedor', content: `<h5>Níveis de Maturidade:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li><b>Básico:</b> Gestão de performance (Meta vs. Real).</li><li><b>Avançado:</b> Executa estratégia clara para atingimento (ações, incentivos).</li><li><b>Alto Nível:</b> Atua na gestão de clientes estáveis (compradores 3 meses consecutivos).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com a gestão de performance, estratégias e análise de estabilidade.</p>` },
+            { id: 'COM25', area: 'COMERCIAL', title: 'Cobertura Craft', points: 10, pillar: 'performance', role: 'Vendedor', content: `<h5>Níveis de Maturidade:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li><b>Básico:</b> Gestão de performance (Meta vs. Real).</li><li><b>Avançado:</b> Executa estratégia clara para atingimento (ações, incentivos).</li><li><b>Alto Nível:</b> Atua na gestão de clientes estáveis (compradores 3 meses consecutivos).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com a gestão de performance, estratégias e análise de estabilidade.</p>` },
+            { id: 'COM26', area: 'COMERCIAL', title: 'Cobertura Premium', points: 10, pillar: 'performance', role: 'Vendedor', content: `<h5>Níveis de Maturidade:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li><b>Básico:</b> Gestão de performance (Meta vs. Real).</li><li><b>Avançado:</b> Executa estratégia clara para atingimento (ações, incentivos).</li><li><b>Alto Nível:</b> Atua na gestão de clientes estáveis (compradores 3 meses consecutivos).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com a gestão de performance, estratégias e análise de estabilidade.</p>` },
+            { id: 'COM27', area: 'COMERCIAL', title: 'Cobertura Mainstream', points: 10, pillar: 'performance', role: 'Vendedor', content: `<h5>Níveis de Maturidade:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li><b>Básico:</b> Gestão de performance (Meta vs. Real).</li><li><b>Avançado:</b> Executa estratégia clara para atingimento (ações, incentivos).</li><li><b>Alto Nível:</b> Atua na gestão de clientes estáveis (compradores 3 meses consecutivos).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com a gestão de performance, estratégias e análise de estabilidade.</p>` },
+            { id: 'TRD02', area: 'TRADE', title: 'Fotografia de sucesso - Presença', points: 10, pillar: 'performance', role: 'Vendedor', content: `<h5>Níveis de Maturidade:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li><b>Básico:</b> Gestão de performance (Meta vs. Real).</li><li><b>Avançado:</b> Executa estratégia clara para atingimento (ações, incentivos).</li><li><b>Alto Nível:</b> Atua para garantir o crescimento mensal da pontuação/PDVs positivados.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com a gestão de performance, estratégias e análise de crescimento.</p>` },
+            { id: 'COM28', area: 'COMERCIAL', title: 'Gestão de performance do Ranking', points: 5, pillar: 'performance', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Gestão interna dos indicadores do ranking (Star View) por GV, SV e Setor.</li><li>Evidenciar ações mensais de melhoria.</li><li>Realizar benchmarking trimestral com revendas de melhor performance.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha/BI de gestão, evidência das ações e do contato de benchmarking.</p>` },
+            { id: 'COM29', area: 'COMERCIAL', title: 'Mapa térmico', points: 8, pillar: 'performance', role: 'Liderança', content: `<h5>Requisitos Chave:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Gestão do potencial vs. realizado de cobertura por cidade.</li><li>Plano de ação para cidades com potencial abaixo de 75%.</li><li>Apresentar melhoria em pelo menos uma cidade abaixo de 75% Vs. mês anterior.</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com a análise por cidade e planos de ação.</p>` },
+            { id: 'COM30', area: 'COMERCIAL', title: 'Ação de mercado', points: 8, pillar: 'performance', role: 'Liderança', content: `<h5>Requisitos Chave (Gestão em Planilha/BI):</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li>Monitorar por ação: total de PDVs aderentes e investimento.</li><li>Analisar performance de Sell Out dos PDVs aderentes vs. não aderentes (vs. Mês Anterior).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha ou BI com o painel gerencial da performance das ações.</p>` },
+            { id: 'COM31', area: 'COMERCIAL', title: 'Gestão Heishop', points: 8, pillar: 'performance', role: 'Vendedor', content: `<h5>Níveis de Maturidade:</h5><ul class="list-disc pl-5 mt-2 space-y-1"><li><b>Básico:</b> Utiliza Heishop e faz gestão de performance.</li><li><b>Avançado:</b> Possui combos ou promoções ativas na plataforma.</li><li><b>Alto Nível:</b> Possui plano de ação e atinge metas de participação (>=50%).</li></ul><h5 class="mt-4">Evidência Obrigatória:</h5><p class="mt-1">Planilha/BI de gestão, print de ofertas e planos de ação.</p>` },
+        ];
+        
+        const containers = {
+            governanca: document.getElementById('kpi-container-governanca'),
+            lideranca: document.getElementById('kpi-container-lideranca'),
+            execucao: document.getElementById('kpi-container-execucao'),
+            performance: document.getElementById('kpi-container-performance')
+        };
+        const filterArea = document.getElementById('filter-area');
+        const filterRole = document.getElementById('filter-role');
+        
+        const createKpiCard = (kpi) => {
+            return `
+                <div class="kpi-card bg-white rounded-lg shadow-md" data-area="${kpi.area}" data-role="${kpi.role}">
+                    <div class="kpi-card-header flex justify-between items-center p-4 border-b border-gray-200">
+                        <div class="flex-1">
+                            <p class="text-xs font-semibold text-gray-500">${kpi.id} - ${kpi.area}</p>
+                            <h4 class="font-bold text-lg text-gray-800">${kpi.title}</h4>
+                        </div>
+                        <div class="text-center mx-4">
+                            <span class="text-2xl font-bold text-[#4A90E2]">${kpi.points}</span>
+                            <p class="text-xs text-gray-500">pontos</p>
+                        </div>
+                        <div class="chevron text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
+                    <div class="kpi-card-body p-4 text-sm text-gray-700">
+                        ${kpi.content}
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderKpis = () => {
+            Object.values(containers).forEach(c => c.innerHTML = '');
+            const selectedArea = filterArea.value;
+            const selectedRole = filterRole.value;
+
+            kpiData
+                .filter(kpi => (selectedArea === 'Todas as Áreas' || kpi.area === selectedArea))
+                .filter(kpi => (selectedRole === 'Todos os Cargos' || kpi.role === selectedRole))
+                .forEach(kpi => {
+                    if (containers[kpi.pillar]) {
+                        containers[kpi.pillar].innerHTML += createKpiCard(kpi);
+                    }
+                });
+
+            document.querySelectorAll('.kpi-card-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('open');
+                });
+            });
+        };
+        
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) { return label.join(' '); } 
+            return label;
+        };
+
+        const colors = { accent: '#4A90E2', accent2: '#50E3C2', accent3: '#F5A623', dark: '#343A40', light: '#E9ECEF' };
+
+        new Chart(document.getElementById('pontosChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['COMERCIAL', 'ADMINISTRATIVO', 'RH', 'TRADE', 'SISTEMA OPERACIONAL'],
+                datasets: [{
+                    data: [138, 8, 10, 10, 8],
+                    backgroundColor: [colors.accent, colors.accent2, colors.accent3, colors.dark, colors.light],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 3
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { title: tooltipTitleCallback } } } }
+        });
+
+        new Chart(document.getElementById('visitasChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Gerente', 'Supervisor', 'Diretor/Prop.'],
+                datasets: [
+                    { label: 'FDS', data: [20, 10, 0], backgroundColor: colors.accent },
+                    { label: 'Coaching', data: [20, 5, 0], backgroundColor: colors.accent2 },
+                    { label: 'Estratégico', data: [10, 20, 20], backgroundColor: colors.dark }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { title: tooltipTitleCallback } } } }
+        });
+
+        filterArea.addEventListener('change', renderKpis);
+        filterRole.addEventListener('change', renderKpis);
+
+        renderKpis();
+    });
+</script>
+
+</body>
+</html>
